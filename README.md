@@ -32,7 +32,7 @@ GEMINI_API_KEY=your_actual_api_key_here
 
 Required Render settings:
 - **Build Command:** `pip install -r requirements.txt`
-- **Start Command:** `gunicorn gunicorn_server:app`
+- **Start Command:** `pip install gunicorn && gunicorn gunicorn_server:app`
 
 ## Usage 
 ```python
