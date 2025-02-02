@@ -8,7 +8,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-123')  # Update this
 
 # Configure Generative AI
-genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
+genai.configure(api_key=os.environ['GEMINI_API_KEY'])
 model = genai.GenerativeModel('gemini-pro')
 
 # Markdown filter
