@@ -4,6 +4,8 @@ import os
 from config import configure_ai  # Import the AI model configuration
 import google.generativeai as genai
 import requests
+from threading import Thread  # Add this import at the top
+import logging  # For error logging
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -52,6 +54,14 @@ def setup_telegram_webhook(app):
 
 # Call to set up the Telegram webhook after the AI model is initialized
 setup_telegram_webhook(app)
+
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 # Markdown filter for rendering
 @app.template_filter('markdown')
