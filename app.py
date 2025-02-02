@@ -1,11 +1,13 @@
 # app.py - Add these changes
 from flask import Flask, request, render_template, Markup
+from telegram_bot import setup_telegram_webhook
 import google.generativeai as genai
 import os
 import markdown2
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-123')  # Update this
+setup_telegram_webhook(app)
 
 # Configure Generative AI
 genai.configure(api_key=os.environ['GEMINI_API_KEY'])
