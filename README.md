@@ -73,5 +73,11 @@ Pull requests welcome! Please follow PEP8 guidelines.
 ## License 
 MIT License - See [LICENSE](LICENSE)
 
-## Contact 
-Developer Team - help@aspirantai.in
+## Contact 📬
+
+**Support Channels:**
+- 📧 Email: [support](#)
+- 🐛 GitHub Issues: [Report Bugs/Requests](https://github.com/Aspirant-ai/aspirant-ai/issues)
+- 💬 Community Discord: [Join Discussion](#)
+
+
