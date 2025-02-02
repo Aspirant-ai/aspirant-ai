@@ -1,8 +1,11 @@
 import os
 import requests
-from flask import Flask
+from flask import Flask, request
 from threading import Thread
-from app import model  # Reuse the existing AI model
+from config import configure_ai  # Import AI configuration from config.py
+
+# Initialize AI model here
+model = configure_ai()
 
 TELEGRAM_TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
 BASE_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
@@ -19,15 +22,13 @@ def send_message(chat_id, text):
 def process_telegram_message(message):
     chat_id = message['chat']['id']
     doubt = message.get('text', '')
-    
+
     # Generate explanation
-    explanation = model.generate_content(
-        f"Explain {doubt} in simple terms with examples").text
-    
+    explanation = model.generate_content(f"Explain {doubt} in simple terms with examples").text
+
     # Generate practice questions
-    questions = model.generate_content(
-        f"Generate 3 practice questions about {doubt} with answers").text
-    
+    questions = model.generate_content(f"Generate 3 practice questions about {doubt} with answers").text
+
     response = f"*Explanation*:\n{explanation}\n\n*Practice Questions*:\n{questions}"
     send_message(chat_id, response)
 
@@ -36,10 +37,9 @@ def setup_telegram_webhook(app):
     def telegram_webhook():
         update = request.json
         if 'message' in update:
-            Thread(target=process_telegram_message, 
-                 args=(update['message'],)).start()
+            Thread(target=process_telegram_message, args=(update['message'],)).start()
         return '', 200
 
-    # Set webhook URL
+    # Set webhook URL dynamically for Render deployment
     webhook_url = f"{os.environ['RENDER_EXTERNAL_URL']}/telegram-webhook"
     requests.get(f"{BASE_URL}/setWebhook?url={webhook_url}")
