@@ -1,28 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>AI Study Assistant</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aspirant AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card-header h4 { margin: 0; }
+        pre { background: #e9ecef; padding: 1rem; border-radius: 0.25rem; }
+        .form-control:focus { box-shadow: none; border-color: #86b7fe; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>AI Study Assistant 🤖</h1>
+    <div class="container mt-4">
+        <h1 class="mb-4 text-primary">AI Study Assistant 🤖</h1>
         
-        <div class="section">
-            <h2>Generate Practice Questions</h2>
-            <input type="text" id="topic" placeholder="Enter a topic (e.g. Quantum Mechanics)">
-            <button onclick="generateQuestions()">Generate Questions</button>
-            <div id="questions-output"></div>
+        <!-- Doubt Section -->
+        <div class="card mb-4 shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">🤔 Ask Your Doubt</h4>
+            </div>
+            <div class="card-body">
+                <form action="/resolve_doubt" method="POST">
+                    <div class="input-group">
+                        <input type="text" name="doubt" class="form-control form-control-lg" 
+                               placeholder="What concept would you like to understand better?">
+                        <button class="btn btn-success btn-lg" type="submit">
+                            Get Explanation
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <div class="section">
-            <h2>Ask a Doubt</h2>
-            <textarea id="doubt" placeholder="Type your question here..."></textarea>
-            <button onclick="askDoubt()">Get Explanation</button>
-            <div id="explanation-output"></div>
+        <!-- Explanation -->
+        {% if response %}
+        <div class="card mb-4 shadow">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">📚 Detailed Explanation</h4>
+            </div>
+            <div class="card-body">
+                {{ response|markdown }}
+            </div>
         </div>
+        {% endif %}
+
+        <!-- Practice Questions -->
+        {% if practice_questions %}
+        <div class="card shadow">
+            <div class="card-header bg-warning">
+                <h4 class="mb-0">📝 Practice Questions</h4>
+            </div>
+            <div class="card-body">
+                {{ practice_questions|markdown }}
+            </div>
+        </div>
+        {% endif %}
     </div>
 
-    <script src="/static/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

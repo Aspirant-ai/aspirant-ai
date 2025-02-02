@@ -1,52 +1,39 @@
-from flask import Flask, request, jsonify, render_template
+# app.py - Add these changes
+from flask import Flask, request, render_template, Markup
 import google.generativeai as genai
 import os
-
-# Configure Gemini API
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', 'your-api-key-here')
-
-# Validate API key on startup
-if not os.getenv('GEMINI_API_KEY'):
-    raise ValueError("Missing GEMINI_API_KEY in environment variables")
-
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
+import markdown2
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-123')  # Update this
 
-@app.route('/generate_questions', methods=['POST'])
-def generate_questions():
-    data = request.json
-    topic = data.get('topic', '')
-    
-    prompt = f"Generate 5 practice questions about {topic} for competitive exam students. Include varying difficulty levels."
-    
-    try:
-        response = model.generate_content(prompt)
-        return jsonify({
-            'questions': response.text.split('\n')
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# Configure Generative AI
+genai.configure(api_key=os.environ['GOOGLE_API_KEY'])
+model = genai.GenerativeModel('gemini-pro')
 
-@app.route('/ask_doubt', methods=['POST'])
-def ask_doubt():
-    data = request.json
-    question = data.get('question', '')
-    
-    prompt = f"Explain this concept in simple terms and provide examples: {question}"
-    
-    try:
-        response = model.generate_content(prompt)
-        return jsonify({
-            'explanation': response.text
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# Markdown filter
+@app.template_filter('markdown')
+def markdown_filter(text):
+    return Markup(markdown2.markdown(text))
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/resolve_doubt', methods=['POST'])
+def resolve_doubt():
+    doubt = request.form['doubt']
+    
+    # Generate explanation
+    explanation = model.generate_content(f"Explain {doubt} in simple terms with examples").text
+    
+    # Generate practice questions
+    questions = model.generate_content(
+        f"Generate 3 practice questions about {doubt} with answers").text
+    
+    return render_template('index.html',
+                         response=explanation,
+                         practice_questions=questions)
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
