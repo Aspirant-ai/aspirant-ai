@@ -1,99 +1,36 @@
-const inputField = document.getElementById('user-input');
-const sendBtn = document.getElementById('send-btn');
-const messagesDiv = document.getElementById('messages');
+async function postData(url, data) {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+    return await response.json();
+}
 
-// Handle message sending
-async function sendMessage() {
-    const message = inputField.value.trim();
-    if (!message) return;
-
-    appendMessage('user', message);
-    inputField.value = '';
-    showLoading();
+async function generateQuestions() {
+    const topic = document.getElementById('topic').value;
+    const output = document.getElementById('questions-output');
+    output.innerHTML = '<div class="loading">Generating questions...</div>';
 
     try {
-        const response = await fetch('/ask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                query: message // Use 'query' to match the backend
-            })
-        });
-        
-        if (response.ok) {
-            await handleStream(response);
-        } else {
-            hideLoading();
-            showError('Failed to get a valid response from the server');
-        }
+        const response = await postData('/generate_questions', { topic });
+        output.innerHTML = '<ol>' + 
+            response.questions.map(q => `<li>${q}</li>`).join('') + 
+            '</ol>';
     } catch (error) {
-        console.error('Error:', error);
-        hideLoading();
-        showError('Network error');
+        output.innerHTML = `<div class="error">Error: ${error.message}</div>`;
     }
 }
 
+async function askDoubt() {
+    const question = document.getElementById('doubt').value;
+    const output = document.getElementById('explanation-output');
+    output.innerHTML = '<div class="loading">Analyzing your doubt...</div>';
 
-let currentAiMessage = null;
-let accumulatedResponse = '';
-
-// Updated handleStream function
-async function handleStream(response) {
-    const data = await response.json();
-    if (!data.stream_url) {
-        showError('No stream URL received');
-        return;
+    try {
+        const response = await postData('/ask_doubt', { question });
+        output.innerHTML = `<div class="explanation">${response.explanation}</div>`;
+    } catch (error) {
+        output.innerHTML = `<div class="error">Error: ${error.message}</div>`;
     }
-
-    currentAiMessage = document.createElement('div');
-    messagesDiv.appendChild(currentAiMessage);
-    accumulatedResponse = '';
-
-    const eventSource = new EventSource(data.stream_url);
-    
-    eventSource.onmessage = (e) => {
-        if (e.data.trim() === '') return;
-        accumulatedResponse += e.data;
-        currentAiMessage.innerHTML = marked ? marked.parse(accumulatedResponse) : accumulatedResponse;
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    };
-
-    eventSource.onerror = (err) => {
-        console.error('EventSource error:', err);
-        eventSource.close();
-        showError('Connection error');
-        hideLoading();
-    };
-}
-
-// Event listeners
-sendBtn.addEventListener('click', sendMessage);
-inputField.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendMessage();
-});
-
-function appendMessage(sender, text) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${sender}-message`;
-    messageDiv.textContent = text;
-    messagesDiv.appendChild(messageDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-}
-
-function showLoading() {
-    document.getElementById('loading').style.display = 'block';
-}
-
-function hideLoading() {
-    document.getElementById('loading').style.display = 'none';
-}
-
-function showError(message) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'message error-message';
-    errorDiv.textContent = message;
-    messagesDiv.appendChild(errorDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }

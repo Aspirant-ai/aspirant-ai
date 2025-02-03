@@ -1,91 +1,101 @@
-from flask import Flask, request, render_template, Response, stream_with_context, session, jsonify, url_for
+from flask import Flask, request, render_template, Response
+from markupsafe import Markup
+import markdown2
 import os
+from config import configure_ai  # Import the AI model configuration
 import google.generativeai as genai
-from datetime import datetime
+import requests
+from threading import Thread  # Add this import at the top
+import logging  # For error logging
 
-app = Flask(__name__, static_folder="static")
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-123')
+# Initialize Flask app
+app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'dev-secret-key-123')  # Update this
 
-# Validate environment variables
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
-if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY environment variable not set")
+# Initialize AI model
+model = configure_ai()
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
+# Telegram Bot Setup
+TELEGRAM_TOKEN = os.environ['TELEGRAM_BOT_TOKEN']
+BASE_URL = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}"
 
-def generate_response(user_query):
-    """Generates structured responses with enhanced error handling"""
-    try:
-        # Clean history before sending to AI model
-        clean_history = [
-            {'role': 'user' if msg['is_user'] else 'assistant', 'content': msg['text']}
-            for msg in session.get('chat_history', [])
-        ]
-        
-        # Create context-aware prompt
-        context_prompt = f"""
-        Current conversation history:
-        {clean_history[-3:]}
-        
-        New query: {user_query}
-        """
-        
-        response = model.generate_content(context_prompt)
-        return response.text
-        
-    except genai.APIError as e:
-        return f"API Error: {str(e)}"
-    except Exception as e:
-        return f"Error generating response: {str(e)}"
+def send_message(chat_id, text):
+    url = f"{BASE_URL}/sendMessage"
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "Markdown"
+    }
+    requests.post(url, json=payload)
+
+def process_telegram_message(message):
+    chat_id = message['chat']['id']
+    doubt = message.get('text', '')
+
+    # Generate explanation
+    explanation = model.generate_content(f"Explain {doubt} in simple terms with examples").text
+
+    # Generate practice questions
+    questions = model.generate_content(f"Generate 3 practice questions about {doubt} with answers").text
+
+    response = f"*Explanation*:\n{explanation}\n\n*Practice Questions*:\n{questions}"
+    send_message(chat_id, response)
+
+def setup_telegram_webhook(app):
+    @app.route('/telegram-webhook', methods=['POST'])
+    def telegram_webhook():
+        update = request.json
+        if 'message' in update:
+            Thread(target=process_telegram_message, args=(update['message'],)).start()
+        return '', 200
+
+    # Set webhook URL
+    webhook_url = f"{os.environ['RENDER_EXTERNAL_URL']}/telegram-webhook"
+    requests.get(f"{BASE_URL}/setWebhook?url={webhook_url}")
+
+# Call to set up the Telegram webhook after the AI model is initialized
+setup_telegram_webhook(app)
 
 
-@app.before_request
-def check_session_and_validate_context():
-    # Initialize chat history if not present
-    if 'chat_history' not in session:
-        session['chat_history'] = []
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-    # Clean old messages older than 30 minutes
-    if 'chat_history' in session:
-        now = datetime.now()
-        session['chat_history'] = [
-            msg for msg in session['chat_history'] 
-            if (now - datetime.fromisoformat(msg['time'])).seconds < 1800
-        ]
+# Markdown filter for rendering
+@app.template_filter('markdown')
+def markdown_filter(text):
+    return Markup(markdown2.markdown(text))
 
-# Rest of the routes remain the same as in your code...
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/resolve_doubt', methods=['POST'])
+def resolve_doubt():
+    doubt = request.form['doubt']
+
+    # Generate explanation
+    explanation = model.generate_content(f"Explain {doubt} in simple terms with examples").text
+
+    # Generate practice questions
+    questions = model.generate_content(f"Generate 3 practice questions about {doubt} with answers").text
+
+    return render_template('index.html',
+                         response=explanation,
+                         practice_questions=questions)
+
 @app.route('/stream')
 def stream():
     def generate():
-        try:
-            user_query = request.args.get('q')
-            full_response = generate_response(user_query)
-            sentences = [s + '.' for s in full_response.split('. ') if s]
-            for sentence in sentences:
-                yield f"data: {sentence}\n\n"
-        except Exception as e:
-            yield f"data: ⚠️ Error: {str(e)}\n\n"
-        yield "event: close\ndata: \n\n"
+        user_query = request.args.get('q')
+        for chunk in generate_response(user_query):
+            yield f"data: {chunk}\n\n"
+    return Response(generate(), mimetype='text/event-stream')
 
-    return Response(stream_with_context(generate()), mimetype='text/event-stream')
-@app.route('/ask', methods=['POST'])
-def ask():
-    try:
-        user_query = request.json.get('query')  # Expects 'query' key
-        if not user_query:
-            return jsonify(error="Empty query"), 400
-        return jsonify(
-            stream_url=url_for('stream', q=user_query, _external=True)
-        )
-    except Exception as e:
-        app.logger.error(f"Ask endpoint error: {str(e)}")
-        return jsonify(error="Server error"), 500
-
+# Render Deployment Setup (web server)
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    app.run(host='0.0.0.0', port=port)
