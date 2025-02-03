@@ -1,4 +1,5 @@
-from flask import Flask, request, render_template, Markup, Response
+from flask import Flask, request, render_template, Response
+from markupsafe import Markup
 import markdown2
 import os
 from config import configure_ai  # Import the AI model configuration
