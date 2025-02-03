@@ -4,7 +4,7 @@ import os
 from markupsafe import Markup
 import markdown2
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 
 # Configure logging
 app.logger.setLevel('INFO')
