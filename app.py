@@ -1,7 +1,8 @@
-from flask import Flask, request, render_template, Response, stream_with_context
+from flask import Flask, request, render_template, Response, stream_with_context, session
 import time
 import os
 import google.generativeai as genai
+from datetime import datetime
 
 app = Flask(__name__, static_folder="static")
 

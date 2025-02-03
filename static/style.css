@@ -99,6 +99,32 @@ body {
     animation: spin 1s linear infinite;
 }
 
+
+.ai-message {
+    white-space: pre-wrap;
+    text-align: left;
+}
+
+.ai-message code {
+    background: #f3f4f6;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.ai-message pre {
+    background: #f3f4f6;
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 8px 0;
+}
+
+.ai-message pre code {
+    background: none;
+    padding: 0;
+}
+
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
