@@ -14,57 +14,58 @@ async function sendMessage() {
     try {
         const response = await fetch('/ask', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                query: message // Use 'query' to match the backend
+            })
         });
         
-        if(response.ok) {
+        if (response.ok) {
             await handleStream(response);
+        } else {
+            hideLoading();
+            showError('Failed to get a valid response from the server');
         }
     } catch (error) {
         console.error('Error:', error);
         hideLoading();
+        showError('Network error');
     }
 }
 
-let currentAiMessage = null;
 
+let currentAiMessage = null;
+let accumulatedResponse = '';
+
+// Updated handleStream function
 async function handleStream(response) {
+    const data = await response.json();
+    if (!data.stream_url) {
+        showError('No stream URL received');
+        return;
+    }
+
     currentAiMessage = document.createElement('div');
-    currentAiMessage.className = 'message ai-message';
     messagesDiv.appendChild(currentAiMessage);
+    accumulatedResponse = '';
+
+    const eventSource = new EventSource(data.stream_url);
     
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let partial = '';
-    
-    while(true) {
-        const { done, value } = await reader.read();
-        if(done) break;
-        
-        buffer += decoder.decode(value, { stream: true });
-        
-        // Process word by word
-        const words = buffer.split(' ');
-        buffer = words.pop() || '';
-        
-        for(const word of words) {
-            partial += word + ' ';
-            currentAiMessage.innerHTML = marked.parse(partial);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            await new Promise(r => setTimeout(r, 50)); // Typing speed
-        }
-    }
-    
-    // Add remaining buffer
-    if(buffer) {
-        partial += buffer;
-        currentAiMessage.innerHTML = marked.parse(partial);
-    }
-    
-    currentAiMessage = null;
-    hideLoading();
+    eventSource.onmessage = (e) => {
+        if (e.data.trim() === '') return;
+        accumulatedResponse += e.data;
+        currentAiMessage.innerHTML = marked ? marked.parse(accumulatedResponse) : accumulatedResponse;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    };
+
+    eventSource.onerror = (err) => {
+        console.error('EventSource error:', err);
+        eventSource.close();
+        showError('Connection error');
+        hideLoading();
+    };
 }
 
 // Event listeners
@@ -87,4 +88,12 @@ function showLoading() {
 
 function hideLoading() {
     document.getElementById('loading').style.display = 'none';
+}
+
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'message error-message';
+    errorDiv.textContent = message;
+    messagesDiv.appendChild(errorDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
