@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, Markup
+from flask import Flask, request, render_template, Markup, Response
 import markdown2
 import os
 from config import configure_ai  # Import the AI model configuration
@@ -85,6 +85,14 @@ def resolve_doubt():
     return render_template('index.html',
                          response=explanation,
                          practice_questions=questions)
+
+@app.route('/stream')
+def stream():
+    def generate():
+        user_query = request.args.get('q')
+        for chunk in generate_response(user_query):
+            yield f"data: {chunk}\n\n"
+    return Response(generate(), mimetype='text/event-stream')
 
 # Render Deployment Setup (web server)
 if __name__ == '__main__':
