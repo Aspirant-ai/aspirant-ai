@@ -1,6 +1,7 @@
 from flask import Flask, request, render_template, Response, stream_with_context, session, jsonify, url_for
 import os
 import google.generativeai as genai
+from datetime import datetime
 
 app = Flask(__name__, static_folder="static")
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-123')
