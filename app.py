@@ -1,7 +1,6 @@
 from flask import Flask, request, render_template, Response, stream_with_context, session, jsonify, url_for
 import os
 import google.generativeai as genai
-from datetime import datetime
 
 app = Flask(__name__, static_folder="static")
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-123')
@@ -15,58 +14,30 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-pro')
 
 def generate_response(user_query):
+    """Generates structured responses with enhanced error handling"""
     try:
-        # Get current history or initialize
-        chat_history = session.get('chat_history', [])
-        
-        # Store user query FIRST
-        chat_history.append({
-            'role': 'user',
-            'parts': [user_query],
-            'time': datetime.now().isoformat()
-        })
+        # Clean history before sending to AI model
+        clean_history = [
+            {'role': 'user' if msg['is_user'] else 'assistant', 'content': msg['text']}
+            for msg in session.get('chat_history', [])
+        ]
         
         # Create context-aware prompt
         context_prompt = f"""
-        Conversation History:
-        {chat_history[-3:]}  # Keep last 3 exchanges
+        Current conversation history:
+        {clean_history[-3:]}
         
-        New Query: {user_query[:500]}
-        
-        Respond to the current query while considering:
-        1. Full conversation context
-        2. Previous step numbers mentioned
-        3. Any specific clarification requests
+        New query: {user_query}
         """
         
-        # Generate response with updated history
-        chat = model.start_chat(history=chat_history)
-        try:
-            generation_config = {
-                "temperature": 0.7,
-            }
-            response = chat.send_message(context_prompt, **generation_config)
-            full_response = response.text
-        except genai.APIError as e:
-            return f"API Error: {str(e)}"
-        except Exception as e:
-            return f"Error generating response: {str(e)}"
+        response = model.generate_content(context_prompt)
+        return response.text
         
-        # Store AI response AFTER generation
-        chat_history.append({
-            'role': 'model',
-            'parts': [full_response],
-            'time': datetime.now().isoformat()
-        })
-        
-        # Update session with new history
-        session['chat_history'] = chat_history[-6:]  # Keep last 6 messages
-        session.modified = True
-
-        return full_response  # Return full response as a single string
-        
+    except genai.APIError as e:
+        return f"API Error: {str(e)}"
     except Exception as e:
-        return f"Error in generate_response: {str(e)}"  # Catch any errors in the function
+        return f"Error generating response: {str(e)}"
+
 
 @app.before_request
 def check_session_and_validate_context():
