@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, Response
+from flask import Flask, request, render_template, Response, stream_with_context
 from markupsafe import Markup
 import markdown2
 import os
@@ -90,10 +90,21 @@ def resolve_doubt():
 @app.route('/stream')
 def stream():
     def generate():
-        user_query = request.args.get('q')
-        for chunk in generate_response(user_query):
-            yield f"data: {chunk}\n\n"
-    return Response(generate(), mimetype='text/event-stream')
+        try:
+            user_query = request.args.get('q')
+            for chunk in generate_response(user_query):
+                yield f"data: {chunk}\n\n"
+        except Exception as e:
+            yield f"data: Error: {str(e)}\n\n"
+        finally:
+            yield "event: close\ndata: \n\n"
+    return Response(stream_with_context(generate()), mimetype='text/event-stream')
+
+@app.route('/ask', methods=['POST'])
+def ask():
+    data = request.get_json()
+    user_message = data.get('message', '')
+    return Response(stream_with_context(generate_response(user_message)), mimetype='text/event-stream')
 
 # Render Deployment Setup (web server)
 if __name__ == '__main__':
