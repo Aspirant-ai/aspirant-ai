@@ -27,24 +27,43 @@ async function sendMessage() {
     }
 }
 
+let currentAiMessage = null;
+
 async function handleStream(response) {
+    currentAiMessage = document.createElement('div');
+    currentAiMessage.className = 'message ai-message';
+    messagesDiv.appendChild(currentAiMessage);
+    
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
+    let buffer = '';
+    let partial = '';
     
     while(true) {
         const { done, value } = await reader.read();
         if(done) break;
         
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+        buffer += decoder.decode(value, { stream: true });
         
-        lines.forEach(line => {
-            if(line.startsWith('data: ')) {
-                const message = line.replace('data: ', '');
-                appendMessage('ai', message);
-            }
-        });
+        // Process word by word
+        const words = buffer.split(' ');
+        buffer = words.pop() || '';
+        
+        for(const word of words) {
+            partial += word + ' ';
+            currentAiMessage.innerHTML = marked.parse(partial);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            await new Promise(r => setTimeout(r, 50)); // Typing speed
+        }
     }
+    
+    // Add remaining buffer
+    if(buffer) {
+        partial += buffer;
+        currentAiMessage.innerHTML = marked.parse(partial);
+    }
+    
+    currentAiMessage = null;
     hideLoading();
 }
 
