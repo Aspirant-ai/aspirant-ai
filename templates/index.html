@@ -3,185 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aspirant AI - Your Smart Study Buddy</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <title>Aspirant AI Chat</title>
     <style>
-        body { background-color: #f8f9fa; }
-        .card-header h4 { margin: 0; }
-        pre { background: #e9ecef; padding: 1rem; border-radius: 0.25rem; }
-        .form-control:focus { box-shadow: none; border-color: #86b7fe; }
-        .hero-section {
-            background: linear-gradient(to right, #007bff, #6610f2);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #ffffff;
+        }
+
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f7f7f8;
+        }
+
+        .message {
+            max-width: 80%;
+            margin: 12px 0;
+            padding: 16px 20px;
+            border-radius: 16px;
+            animation: fadeIn 0.3s ease-in;
+            line-height: 1.5;
+            font-size: 16px;
+        }
+
+        .user-message {
+            background: #007bff;
             color: white;
-            padding: 50px 0;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .ai-message {
+            background: #ffffff;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: 12px;
+        }
+
+        #user-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #user-input:focus {
+            border-color: #007bff;
+        }
+
+        #send-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #send-btn:hover {
+            background: #0056b3;
+        }
+
+        .loading-indicator {
+            display: none;
+            padding: 16px;
             text-align: center;
         }
-        .feature-icon {
-            font-size: 3rem;
-            color: #007bff;
-        }
-        .testimonial {
-            font-style: italic;
-            color: #555;
-        }
-        .footer {
-            background-color: #343a40;
-            color: white;
-            padding: 20px 0;
-            text-align: center;
-        }
+
         .loading-spinner {
-          animation: spin 1s linear infinite;
-          width: 24px;
-          height: 24px;
-          border: 3px solid #f3f3f3;
-          border-top: 3px solid #3498db;
-          border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(0,123,255,0.2);
+            border-top-color: #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
-
-    <!-- Hero Section -->
-    <div class="hero-section">
-        <div class="container">
-            <h1 class="display-4 fw-bold">Aspirant AI 🤖</h1>
-            <p class="lead">Your Smart Study Companion for Exam Success</p>
-            <a href="#doubt-section" class="btn btn-light btn-lg shadow">Ask a Doubt</a>
-        </div>
-    </div>
-
-    <div class="container mt-5">
+    <div class="chat-container">
+        <div class="messages-container" id="messages"></div>
         
-        <!-- Features Section -->
-        <div class="row text-center mb-5">
-            <div class="col-md-4">
-                <i class="fa-solid fa-brain feature-icon"></i>
-                <h4>AI-Powered Doubt Solving</h4>
-                <p>Get instant, AI-generated explanations for complex topics.</p>
-            </div>
-            <div class="col-md-4">
-                <i class="fa-solid fa-file-pen feature-icon"></i>
-                <h4>Personalized Practice</h4>
-                <p>Receive customized practice questions based on your learning.</p>
-            </div>
-            <div class="col-md-4">
-                <i class="fa-solid fa-chart-line feature-icon"></i>
-                <h4>Performance Tracking</h4>
-                <p>Monitor your progress and improve with data-driven insights.</p>
-            </div>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Type your message here...">
+            <button id="send-btn">Send</button>
         </div>
-
-        <!-- Doubt Section -->
-        <div id="doubt-section" class="card mb-4 shadow-lg">
-            <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">🤔 Ask Your Doubt</h4>
-            </div>
-            <div class="card-body">
-                <form action="/resolve_doubt" method="POST">
-                    <div class="input-group">
-                        <input type="text" name="doubt" class="form-control form-control-lg" 
-                               placeholder="What concept would you like to understand better?">
-                        <button class="btn btn-success btn-lg" type="submit">
-                            Get Explanation
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Explanation -->
-        {% if response %}
-        <div class="card mb-4 shadow">
-            <div class="card-header bg-info text-white">
-                <h4 class="mb-0">📚 Detailed Explanation</h4>
-            </div>
-            <div class="card-body">
-                {{ response|markdown }}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Practice Questions -->
-        {% if practice_questions %}
-        <div class="card shadow">
-            <div class="card-header bg-warning">
-                <h4 class="mb-0">📝 Practice Questions</h4>
-            </div>
-            <div class="card-body">
-                {{ practice_questions|markdown }}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Testimonials Section -->
-        <div class="mt-5">
-            <h2 class="text-center mb-4">What Students Say 💬</h2>
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="card p-3 shadow-sm">
-                        <p class="testimonial">"Aspirant AI helped me clear my concepts in minutes! Best AI tutor ever."</p>
-                        <strong>- Aman Sharma, SSC Aspirant</strong>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card p-3 shadow-sm">
-                        <p class="testimonial">"This platform made my UPSC preparation much easier with personalized questions."</p>
-                        <strong>- Priya Verma, UPSC Aspirant</strong>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card p-3 shadow-sm">
-                        <p class="testimonial">"I love how I can instantly get explanations on any topic. Highly recommended!"</p>
-                        <strong>- Rahul Gupta, SBI PO Aspirant</strong>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="chat-container">
-          <div id="messages"></div>
-          <div id="loading" style="display:none;">
+        
+        <div id="loading" class="loading-indicator">
             <div class="loading-spinner"></div>
-          </div>
-          <input id="user-input" type="text">
         </div>
-
     </div>
 
-    <!-- Footer -->
-    <footer class="footer mt-5">
-        <div class="container">
-            <p class="mb-0"> 2025 Aspirant AI. All Rights Reserved.</p>
-            <p>
-                <a href="#" class="text-white">Privacy Policy</a> | 
-                <a href="#" class="text-white">Terms of Service</a>
-            </p>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const eventSource = new EventSource('/stream');
+        const inputField = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const messagesDiv = document.getElementById('messages');
 
+        // Handle message sending
+        async function sendMessage() {
+            const message = inputField.value.trim();
+            if (!message) return;
+
+            appendMessage('user', message);
+            inputField.value = '';
+            showLoading();
+
+            try {
+                await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                hideLoading();
+            }
+        }
+
+        // Event listeners
+        sendBtn.addEventListener('click', sendMessage);
+        inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Handle incoming messages
         eventSource.onmessage = (e) => {
-          document.getElementById('loading').style.display = 'none';
-          appendMessage('ai', e.data);
+            hideLoading();
+            appendMessage('ai', e.data);
         };
 
         function appendMessage(sender, text) {
-          const messagesDiv = document.getElementById('messages');
-          const messageElem = document.createElement('div');
-          messageElem.className = `${sender}-message`;
-          messageElem.textContent = text;
-          messagesDiv.appendChild(messageElem);
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
         }
     </script>
 </body>

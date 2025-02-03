@@ -1,36 +1,41 @@
-async function postData(url, data) {
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
+const eventSource = new EventSource('/stream');
+const inputField = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+
+sendBtn.addEventListener('click', async () => {
+  const message = inputField.value.trim();
+  if (message) {
+    appendMessage('user', message);
+    inputField.value = '';
+    showLoading();
+    
+    // Send message to server
+    await fetch('/ask', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
     });
-    return await response.json();
+  }
+});
+
+eventSource.onmessage = (e) => {
+  hideLoading();
+  appendMessage('ai', e.data);
+};
+
+function appendMessage(sender, text) {
+  const messagesDiv = document.getElementById('messages');
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `message ${sender}-message`;
+  messageDiv.textContent = text;
+  messagesDiv.appendChild(messageDiv);
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 }
 
-async function generateQuestions() {
-    const topic = document.getElementById('topic').value;
-    const output = document.getElementById('questions-output');
-    output.innerHTML = '<div class="loading">Generating questions...</div>';
-
-    try {
-        const response = await postData('/generate_questions', { topic });
-        output.innerHTML = '<ol>' + 
-            response.questions.map(q => `<li>${q}</li>`).join('') + 
-            '</ol>';
-    } catch (error) {
-        output.innerHTML = `<div class="error">Error: ${error.message}</div>`;
-    }
+function showLoading() {
+  document.getElementById('loading').style.display = 'block';
 }
 
-async function askDoubt() {
-    const question = document.getElementById('doubt').value;
-    const output = document.getElementById('explanation-output');
-    output.innerHTML = '<div class="loading">Analyzing your doubt...</div>';
-
-    try {
-        const response = await postData('/ask_doubt', { question });
-        output.innerHTML = `<div class="explanation">${response.explanation}</div>`;
-    } catch (error) {
-        output.innerHTML = `<div class="error">Error: ${error.message}</div>`;
-    }
+function hideLoading() {
+  document.getElementById('loading').style.display = 'none';
 }
