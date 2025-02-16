@@ -4,12 +4,12 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Telegram-blueviolet)
 
-[![ASPIRANT AI profile views](https://u8views.com/api/v1/github/profiles/155420983/views/day-week-month-total-count.svg)](https://u8views.com/github/Aspirant-ai)
 
 > **Empowering learners with AI-driven education!** 📚✨
 
 Aspirant AI is an intelligent learning platform leveraging Google's **Gemini AI** to generate practice questions, explain complex concepts, and now available both **as a website and Telegram bot**! 🎉
 
+[![ASPIRANT AI profile views](https://u8views.com/api/v1/github/profiles/155420983/views/day-week-month-total-count.svg)](https://u8views.com/github/Aspirant-ai)
 ---
 
 ## 🌟 Features 
