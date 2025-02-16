@@ -21,11 +21,13 @@ Aspirant AI is an intelligent learning platform leveraging Google's **Gemini AI*
 ✅ Supports multiple subjects and topics  
 
 ---
-## 🎬 Intro Video
 
-![Aspirant AI Intro](https://raw.githubusercontent.com/Aspirant-ai/aspirant-ai/master/Gen-3%20Alpha%20Turbo%204238274687%2C%2093b82eb2-dcdf-4ee1-9%2C%20M%205.mp4)
 
-[Click here to watch the video](https://github.com/Aspirant-ai/aspirant-ai/blob/master/Gen-3%20Alpha%20Turbo%204238274687%2C%2093b82eb2-dcdf-4ee1-9%2C%20M%205.mp4)
+## 🎬 Aspirant AI Intro Video
+
+[![Aspirant AI Intro](https://raw.githubusercontent.com/Aspirant-ai/aspirant-ai/master/aspirant-ai.gif)](https://github.com/Aspirant-ai/aspirant-ai/blob/master/Gen-3%20Alpha%20Turbo%204238274687%2C%2093b82eb2-dcdf-4ee1-9%2C%20M%205.mp4)
+
+🔹 **Click the image to watch the full video!**  
 
 ---
 
