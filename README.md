@@ -77,7 +77,7 @@ TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 ## 🎯 How to Use
 
 ### 🌍 Web Interface
-Simply visit: **[Aspirant AI Web](#)** and start learning! 🖥️
+Simply visit: **[Aspirant AI Web](https://raw.githubusercontent.com/Aspirant-ai/aspirant-ai/master/aspirant-ai.png)** and start learning! 🖥️
 
 ### 🤖 Telegram Bot Commands
 - `/start` - Start the bot
