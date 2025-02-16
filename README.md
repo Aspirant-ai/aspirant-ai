@@ -1,7 +1,7 @@
 # ✨ Aspirant AI - AI-Powered Learning Assistant 🚀
 
 ![Python Version](https://img.shields.io/badge/python-3.13%2B-blue)
-![License](https://img.shields.io/badge/license)
+![License](https://img.shields.io/badge/license-MIT-green)
 ![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Telegram-blueviolet)
 
 [![ASPIRANT AI profile views](https://u8views.com/api/v1/github/profiles/155420983/views/day-week-month-total-count.svg)](https://u8views.com/github/Aspirant-ai)
